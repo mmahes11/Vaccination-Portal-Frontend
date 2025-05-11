@@ -8,6 +8,7 @@ import {
     Paper,
     Box,
 } from '@mui/material';
+import {loginUser} from "../services/login";
 
 const Loginpage: React.FC = () => {
     const [username, setUsername] = useState('');
@@ -15,16 +16,21 @@ const Loginpage: React.FC = () => {
     const [error, setError] = useState('');
     const navigate = useNavigate();
 
-    const handleLogin = (e: React.FormEvent) => {
+    const handleLogin = async (e: React.FormEvent) => {
         e.preventDefault();
-
-        if (username === 'mahesh' && password === '123456') {
+        const formData = new FormData(e.currentTarget as HTMLFormElement);
+        const username = formData.get("username") as string;
+        const password = formData.get("password") as string;
+        try {
+            const response = await loginUser({ username, password });
+            console.log("Login successful:", response);
             localStorage.setItem(
                 'token',
-                'eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiJtYWhlc2giLCJpYXQiOjE3NDY5NzM1ODR9.6QbcHTZS7m2Ygg9-GTzltoMcSkoOtYWe9yY2Fg7FJt3xiZ9gxRqcDNwkYi6sCbqYw6ggyzExZ2-yxe3Kl1ow-g'
+                response.accessToken
             );
             navigate('/Home');
-        } else {
+        } catch (error) {
+            console.error("Login failed:", error);
             setError('Invalid username or password');
         }
     };
@@ -37,6 +43,7 @@ const Loginpage: React.FC = () => {
                 </Typography>
                 <form onSubmit={handleLogin} className="space-y-4 pt-6">
                     <TextField
+                        name="username"
                         label="Username"
                         variant="outlined"
                         fullWidth
@@ -45,6 +52,7 @@ const Loginpage: React.FC = () => {
                         required
                     />
                     <TextField
+                        name="password"
                         label="Password"
                         type="password"
                         variant="outlined"

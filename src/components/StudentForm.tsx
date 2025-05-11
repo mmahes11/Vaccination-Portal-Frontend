@@ -73,10 +73,10 @@ const StudentForm: React.FC<Props> = ({ open, onClose, onSubmit, student }) => {
         console.log('Scheduled Drive:', form);
         console.log("ASa", isEdit);
         if(isEdit){
-            await addStudent(form);
+            await updateStudent(form.id?.toString() ?? '', form);
             console.log(form.vaccinationStatus)
         }else{
-            await updateStudent(form.id?.toString() ?? '', form);
+            await addStudent(form);
         }
         if(form.vaccinationStatus === "Vaccinated" && assignedDrive) {
             console.log(assignedDrive);
@@ -135,8 +135,9 @@ const StudentForm: React.FC<Props> = ({ open, onClose, onSubmit, student }) => {
                     <MenuItem value="Vaccinated">Vaccinated</MenuItem>
                     <MenuItem value="Not Vaccinated">Not Vaccinated</MenuItem>
                 </TextField>
-                <InputLabel id="drive-select-label">"Drives"</InputLabel>
-                <Select
+                {isEdit &&
+                    <InputLabel id="drive-select-label">"Drives"</InputLabel>}
+                {isEdit && <Select
                     labelId="drive-select-label"
                     value={assignedDrive ?? ""}
                     onChange={(e) => setAssignedDrive(e.target.value as string)}
@@ -153,7 +154,7 @@ const StudentForm: React.FC<Props> = ({ open, onClose, onSubmit, student }) => {
                             {drive.vaccineName}
                         </MenuItem>
                     ))}
-                </Select>
+                </Select>}
 
                 <Button
                     variant="contained"
