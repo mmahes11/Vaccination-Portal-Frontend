@@ -1,14 +1,29 @@
 import React, { useEffect, useState } from 'react';
 import { CSVLink } from 'react-csv';
-import { getAllStudents } from '../services/studentService';
+import {
+    Select,
+    MenuItem,
+    FormControl,
+    InputLabel,
+    Table,
+    TableBody,
+    TableCell,
+    TableContainer,
+    TableHead,
+    TableRow,
+    Paper,
+    Button,
+    Typography,
+    Box,
+} from '@mui/material';
+import { getStudentVaccinationDetails } from '../services/vaccineReports';
 
 interface ReportEntry {
     id: string;
     name: string;
-    class: string;
-    vaccine: string;
-    date: string;
-    vaccinated: boolean;
+    className: string;
+    vaccineName: string;
+    vaccinationDate: string;
 }
 
 const Reports: React.FC = () => {
@@ -20,7 +35,7 @@ const Reports: React.FC = () => {
 
     useEffect(() => {
         const fetchReports = async () => {
-            const data = await getAllStudents(); // Assuming this returns vaccination info too
+            const data = await getStudentVaccinationDetails();
             setReports(data);
             setFiltered(data);
         };
@@ -31,12 +46,12 @@ const Reports: React.FC = () => {
         if (vaccineFilter === 'All') {
             setFiltered(reports);
         } else {
-            setFiltered(reports.filter(r => r.vaccine === vaccineFilter));
+            setFiltered(reports.filter(r => r.vaccineName === vaccineFilter));
         }
         setCurrentPage(1);
     }, [vaccineFilter, reports]);
 
-    const vaccines = Array.from(new Set(reports.map(r => r.vaccine)));
+    const vaccines = Array.from(new Set(reports.map(r => r.vaccineName)));
 
     const paginated = filtered.slice(
         (currentPage - 1) * itemsPerPage,
@@ -46,80 +61,85 @@ const Reports: React.FC = () => {
     const totalPages = Math.ceil(filtered.length / itemsPerPage);
 
     return (
-        <div>
-            <h2>Vaccination Reports</h2>
+        <Box className="p-6">
+            <Typography className="text-center" variant="h4" gutterBottom>
+                Vaccination Reports
+            </Typography>
 
-            <div className="mb-3">
-                <label>Filter by Vaccine:</label>
-                <select
-                    className="form-select"
+            <FormControl fullWidth className="mb-6">
+                <InputLabel>Filter by Vaccine</InputLabel>
+                <Select
                     value={vaccineFilter}
+                    label="Filter by Vaccine"
                     onChange={(e) => setVaccineFilter(e.target.value)}
                 >
-                    <option value="All">All</option>
+                    <MenuItem value="All">All</MenuItem>
                     {vaccines.map((vaccine) => (
-                        <option key={vaccine} value={vaccine}>
+                        <MenuItem key={vaccine} value={vaccine}>
                             {vaccine}
-                        </option>
+                        </MenuItem>
                     ))}
-                </select>
-            </div>
+                </Select>
+            </FormControl>
 
-            <table className="table table-bordered">
-                <thead>
-                <tr>
-                    <th>Name</th>
-                    <th>Class</th>
-                    <th>Vaccine</th>
-                    <th>Date</th>
-                    <th>Vaccinated</th>
-                </tr>
-                </thead>
-                <tbody>
-                {paginated.map((entry) => (
-                    <tr key={entry.id}>
-                        <td>{entry.name}</td>
-                        <td>{entry.class}</td>
-                        <td>{entry.vaccine}</td>
-                        <td>{new Date(entry.date).toLocaleDateString()}</td>
-                        <td>{entry.vaccinated ? 'Yes' : 'No'}</td>
-                    </tr>
-                ))}
-                </tbody>
-            </table>
+            <TableContainer component={Paper} className="mb-6">
+                <Table>
+                    <TableHead>
+                        <TableRow>
+                            <TableCell>Name</TableCell>
+                            <TableCell>Class</TableCell>
+                            <TableCell>Vaccine</TableCell>
+                            <TableCell>Date</TableCell>
+                        </TableRow>
+                    </TableHead>
+                    <TableBody>
+                        {paginated.map((entry) => (
+                            <TableRow key={entry.id}>
+                                <TableCell>{entry.name}</TableCell>
+                                <TableCell>{entry.className}</TableCell>
+                                <TableCell>{entry.vaccineName}</TableCell>
+                                <TableCell>
+                                    {new Date(entry.vaccinationDate).toLocaleDateString()}
+                                </TableCell>
+                            </TableRow>
+                        ))}
+                    </TableBody>
+                </Table>
+            </TableContainer>
 
-            <div className="d-flex justify-content-between align-items-center">
-                <div>
+            <Box className="flex justify-between items-center mb-4">
+                <Typography>
                     Page {currentPage} of {totalPages}
-                </div>
-                <div>
-                    <button
-                        className="btn btn-secondary me-2"
+                </Typography>
+                <Box>
+                    <Button
+                        variant="outlined"
+                        className="mr-2"
                         disabled={currentPage === 1}
                         onClick={() => setCurrentPage((p) => p - 1)}
                     >
                         Previous
-                    </button>
-                    <button
-                        className="btn btn-secondary"
+                    </Button>
+                    <Button
+                        variant="outlined"
                         disabled={currentPage === totalPages}
                         onClick={() => setCurrentPage((p) => p + 1)}
                     >
                         Next
-                    </button>
-                </div>
-            </div>
+                    </Button>
+                </Box>
+            </Box>
 
-            <div className="mt-3">
-                <CSVLink
-                    data={filtered}
-                    filename="vaccination_report.csv"
-                    className="btn btn-success"
-                >
+            <CSVLink
+                data={filtered}
+                filename="vaccination_report.csv"
+                className="inline-block"
+            >
+                <Button variant="contained" color="success">
                     Export CSV
-                </CSVLink>
-            </div>
-        </div>
+                </Button>
+            </CSVLink>
+        </Box>
     );
 };
 

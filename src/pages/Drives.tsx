@@ -5,7 +5,6 @@ import DriveList from '../components/DriveList';
 const Drives: React.FC = () => {
     return (
         <div>
-            <DriveForm />
             <DriveList />
         </div>
     );

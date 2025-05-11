@@ -1,17 +1,49 @@
 import React, { useEffect, useState } from 'react';
-import { getAllDrives } from '../services/driveService';
+import {createDrive, getAllDrives} from '../services/driveService';
+import {
+    Table,
+    TableBody,
+    TableCell,
+    TableContainer,
+    TableHead,
+    TableRow,
+    Paper,
+    CircularProgress,
+    Typography,
+    Box, Drawer,
+} from '@mui/material';
+import StudentForm from "./StudentForm";
+import {addStudent} from "../services/studentService";
+import DriveForm from "./DriveForm";
+
 
 interface Drive {
     id: string;
-    vaccine: string;
-    date: string;
-    location?: string;
+    vaccineName: string;
+    driveDate: string;
+    applicableClasses?: string;
+    availableDoses?: string;
+}
+
+function handleSubmit() {
+
 }
 
 const DriveList: React.FC = () => {
     const [drives, setDrives] = useState<Drive[]>([]);
     const [loading, setLoading] = useState<boolean>(true);
     const [error, setError] = useState<string | null>(null);
+    const [open, setOpen] = useState(false);
+    const handleOpen = () => setOpen(true);
+    const handleClose = () => setOpen(false);
+
+    const handleSubmit = async (form: any) => {
+        console.log('Scheduled Drive:', form);
+
+        await createDrive(form);
+        window.location.reload();
+        alert('Drive Created successfully');
+    };
 
     useEffect(() => {
         const fetchDrives = async () => {
@@ -28,30 +60,63 @@ const DriveList: React.FC = () => {
         fetchDrives();
     }, []);
 
-    if (loading) return <p>Loading drives...</p>;
-    if (error) return <p>{error}</p>;
+    if (loading) {
+        return (
+            <Box className="flex justify-center items-center h-64">
+                <CircularProgress />
+            </Box>
+        );
+    }
+
+    if (error) {
+        return (
+            <Box className="text-center mt-10">
+                <Typography color="error">{error}</Typography>
+            </Box>
+        );
+    }
 
     return (
-        <div>
-            <h2>Vaccination Drives</h2>
-            <table className="table table-striped">
-                <thead>
-                <tr>
-                    <th>Vaccine</th>
-                    <th>Date</th>
-                    <th>Location</th>
-                </tr>
-                </thead>
-                <tbody>
-                {drives.map((drive) => (
-                    <tr key={drive.id}>
-                        <td>{drive.vaccine}</td>
-                        <td>{new Date(drive.date).toLocaleDateString()}</td>
-                        <td>{drive.location || 'N/A'}</td>
-                    </tr>
-                ))}
-                </tbody>
-            </table>
+        <div className="p-6">
+
+            <button type="button" onClick={handleOpen}
+                    className="float-right text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 me-2 mb-2 dark:bg-blue-600 dark:hover:bg-blue-700 focus:outline-none dark:focus:ring-blue-800">
+                Schedule Drive
+            </button>
+
+            <Drawer anchor="right" open={open} onClose={handleClose}>
+                <DriveForm onSubmit={handleSubmit} onClose={handleClose} />
+            </Drawer>
+
+            <Typography
+                variant="h4"
+                className="mb-6 text-center font-bold text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-green-500 flex items-center justify-center gap-2"
+            >
+                Vaccination Drives
+            </Typography>
+
+            <TableContainer component={Paper}>
+                <Table>
+                    <TableHead>
+                        <TableRow>
+                            <TableCell><strong>Vaccine</strong></TableCell>
+                            <TableCell><strong>Date</strong></TableCell>
+                            <TableCell><strong>Applicable Classes</strong></TableCell>
+                            <TableCell><strong>Available Doses</strong></TableCell>
+                        </TableRow>
+                    </TableHead>
+                    <TableBody>
+                        {drives.map((drive) => (
+                            <TableRow key={drive.id}>
+                                <TableCell>{drive.vaccineName}</TableCell>
+                                <TableCell>{new Date(drive.driveDate).toLocaleDateString()}</TableCell>
+                                <TableCell>{drive.applicableClasses || 'N/A'}</TableCell>
+                                <TableCell>{drive.availableDoses || 'N/A'}</TableCell>
+                            </TableRow>
+                        ))}
+                    </TableBody>
+                </Table>
+            </TableContainer>
         </div>
     );
 };
