@@ -7,15 +7,27 @@ import {
     TextField,
     Button,
     MenuItem,
-    Typography
+    Typography,
+    Select,
+    Chip,
+    OutlinedInput, InputLabel
 } from '@mui/material';
-import {addStudent, updateStudent} from "../services/studentService";
+import type { SelectChangeEvent } from '@mui/material/Select';
+import {addStudent, getAllStudents, updateStudent, updateStudentVaccinationRecord} from "../services/studentService";
+import {getAllDrives} from "../services/driveService";
 
 interface Props {
     open: boolean;
     onClose: () => void;
     onSubmit: (form: Student) => void;
     student?: Student | null; // student to edit, or undefined/null if adding
+}
+interface Drive {
+    id: string;
+    vaccineName: string;
+    driveDate: string;
+    applicableClasses?: string;
+    availableDoses?: string;
 }
 
 const initialForm: Student = {
@@ -27,14 +39,29 @@ const initialForm: Student = {
 
 const StudentForm: React.FC<Props> = ({ open, onClose, onSubmit, student }) => {
     const [form, setForm] = useState<Student>(initialForm);
-
+    const [drives, setDrives] = useState<Drive[]>([]);
+    const [loading, setLoading] = useState<boolean>(true);
+    const [error, setError] = useState<string | null>(null);
+    const [assignedDrive, setAssignedDrive] = useState<string>("");
     useEffect(() => {
+        const fetchDrives = async () => {
+            try {
+                const drives = await getAllDrives();
+                console.log(drives);
+                setDrives(drives);
+            } catch (err) {
+                setError('Failed to fetch students');
+            } finally {
+                setLoading(false);
+            }
+        };
         console.log(student);
         if (student) {
             setForm(student);
         } else {
             setForm(initialForm);
         }
+        fetchDrives();
     }, [student, open]);
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
@@ -47,10 +74,20 @@ const StudentForm: React.FC<Props> = ({ open, onClose, onSubmit, student }) => {
         console.log("ASa", isEdit);
         if(isEdit){
             await addStudent(form);
+            console.log(form.vaccinationStatus)
         }else{
             await updateStudent(form.id?.toString() ?? '', form);
         }
-        window.location.reload();
+        if(form.vaccinationStatus === "Vaccinated" && assignedDrive) {
+            console.log(assignedDrive);
+            const studentvaccinationupdate = {
+                "studentId": form.id,
+                "driveId": assignedDrive,
+                "vaccinationDate": new Date().toISOString().slice(0, 10)
+            }
+            await updateStudentVaccinationRecord(studentvaccinationupdate);
+        }
+        //window.location.reload();
         onClose();
     };
 
@@ -98,6 +135,26 @@ const StudentForm: React.FC<Props> = ({ open, onClose, onSubmit, student }) => {
                     <MenuItem value="Vaccinated">Vaccinated</MenuItem>
                     <MenuItem value="Not Vaccinated">Not Vaccinated</MenuItem>
                 </TextField>
+                <InputLabel id="drive-select-label">"Drives"</InputLabel>
+                <Select
+                    labelId="drive-select-label"
+                    value={assignedDrive ?? ""}
+                    onChange={(e) => setAssignedDrive(e.target.value as string)}
+                    input={<OutlinedInput label="Drives" />}
+                    className="bg-white rounded" // Tailwind: white background, rounded corners
+                    MenuProps={{
+                        PaperProps: {
+                            className: "bg-white",
+                        },
+                    }}
+                >
+                    {drives.map((drive) => (
+                        <MenuItem key={drive.id} value={drive.id}>
+                            {drive.vaccineName}
+                        </MenuItem>
+                    ))}
+                </Select>
+
                 <Button
                     variant="contained"
                     color="primary"

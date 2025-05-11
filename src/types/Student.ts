@@ -4,4 +4,5 @@ export type Student = {
     className: string;
     age: string;
     vaccinationStatus: string;
+    drives?: string[];
 };

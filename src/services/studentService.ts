@@ -26,8 +26,12 @@ export const deleteStudent = async (id: string) => {
     return response.data;
 };
 
-export const updateStudentVaccinationRecord = async (id: string) => {
-    const response = await api.delete('/vaccination-records');
+export const updateStudentVaccinationRecord = async (id: {
+    studentId: number | undefined;
+    driveId: string;
+    vaccinationDate: string
+}) => {
+    const response = await api.post('/vaccination-records',id);
     return response.data;
 };
 

@@ -12,8 +12,6 @@ import {
     Typography,
     Box, Drawer,
 } from '@mui/material';
-import StudentForm from "./StudentForm";
-import {addStudent} from "../services/studentService";
 import DriveForm from "./DriveForm";
 
 
@@ -23,10 +21,6 @@ interface Drive {
     driveDate: string;
     applicableClasses?: string;
     availableDoses?: string;
-}
-
-function handleSubmit() {
-
 }
 
 const DriveList: React.FC = () => {
@@ -39,7 +33,6 @@ const DriveList: React.FC = () => {
 
     const handleSubmit = async (form: any) => {
         console.log('Scheduled Drive:', form);
-
         await createDrive(form);
         window.location.reload();
         alert('Drive Created successfully');
